@@ -65,7 +65,7 @@ jobs:
       - name: tar
         run: |
           tar czvf ../a.tar.gz *
-          mv ../a.tar.gz .
+#          mv ../a.tar.gz .
 
 #       - name: Upload release asset
 #         if: github.event == 'release'
