@@ -56,8 +56,8 @@ jobs:
 
       - name: tar
         run: |
-          tar cxvf ../a.tar.gz *
-          cp ../a.tar.gz .
+          tar czvf ../a.tar.gz *
+          mv ../a.tar.gz .
 
       - name: Upload release asset
         if: github.event == 'release'
