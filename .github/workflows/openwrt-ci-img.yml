@@ -9,6 +9,14 @@ name: OpenWrt-CI-img
 
 on: workflow_dispatch
 
+env:
+  # Define your image build parameters
+  RELEASE: 21.02.0-rc2
+  TARGET: sunxi
+  ARCH: cortexa7
+  PROFILE: sinovoip_bananapi-m2-ultra
+  PACKAGES: "base-files ca-bundle dropbear fstools libc libgcc libustream-wolfssl logd luci luci-app-firewall luci-app-samba4 luci-i18n-base-zh-cn luci-base luci-lib-ip luci-lib-nixio luci-mod-admin-full luci-proto-3g luci-proto-ppp luci-theme-bootstrap mtd netifd opkg uci uclient-fetch urandom-seed urngd busybox ppp ppp-mod-pppoe procd rpcd swconfig uboot-envtools partx-utils mkf2fs e2fsprogs dnsmasq firewall4 iptables kmod-ipt-offload kmod-rtc-sunxi kmod-usb-core kmod-usb-net kmod-usb-net-cdc-ether kmod-usb-net-cdc-mbim kmod-usb-net-cdc-ncm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-qmi-wwan kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-qualcomm kmod-usb-serial-sierrawireless kmod-usb-serial-wwan kmod-usb-uhci kmod-usb-wdm kmod-usb2 ppp ppp-mod-pppoe usb-modeswitch sstp-client"
+
 jobs:
 
   build_openwrt:
@@ -59,11 +67,34 @@ jobs:
           tar czvf ../a.tar.gz *
           mv ../a.tar.gz .
 
-      - name: Upload release asset
-        if: github.event == 'release'
-        uses: svenstaro/upload-release-action@v2
+#       - name: Upload release asset
+#         if: github.event == 'release'
+#         uses: svenstaro/upload-release-action@v2
+#         with:
+#           repo_token: ${{ secrets.YOURTOKEN }}
+#           file: ./a.tar.gz
+#           tag: ${{ github.ref }}
+#           file_glob: true
+
+      - name: Generate release tag
+        id: tag
+        run: |
+          mkdir bin
+          mv ../a.tar.gz bin/
+          echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M")"
+          echo "::set-output name=status::success"
+      
+      - name: Release the image
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repo_token: ${{ secrets.YOURTOKEN }}
-          file: ./a.tar.gz
-          tag: ${{ github.ref }}
-          file_glob: true
+          tag_name: OpenWrt-${{ env.TARGET }}-${{ env.RELEASE }}-${{ steps.tag.outputs.release_tag }}
+          files: bin/*
+          body: |
+            Release: `${{ env.RELEASE }}`
+            Target: `${{ env.TARGET }}`
+            Arch: `${{ env.ARCH }}`
+            Build Profile: `${{ env.PROFILE }}`
+            Included Packages: `${{ env.PACKAGES }}`
+
