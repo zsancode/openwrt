@@ -53,14 +53,24 @@ jobs:
           sed -i 's/#src-git helloworld/src-git helloworld/g' ./feeds.conf.default
           ./scripts/feeds update -a
           ./scripts/feeds install -a
+          
+      - name: Download App
+        run: |
+          git clone https://github.com/liuran001/openwrt-packages.git --depth=1 package/extern
 
       - name: Generate configuration file
         run: make defconfig
 
       - name: Make download
         run: |
+          cp build.config .config
           make download -j8
           find dl -size -1024c -exec rm -f {} \;
+
+      - name: Compile firmware
+        run: |
+          make -j$(nproc) || make -j1 V=s
+          make clean
 
       - name: tar
         run: |
